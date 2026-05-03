@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>M2V CONTROL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-300 p-6">
+    <div class="max-w-lg mx-auto bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl">
+        <h2 class="text-xl font-black text-sky-400 text-center mb-6 uppercase tracking-widest">M2V Auto Poster</h2>
+        
+        <div class="space-y-4">
+            <input type="password" id="token" placeholder="Facebook Token" class="w-full bg-slate-800 p-3 rounded-xl outline-none focus:ring-2 ring-sky-500">
+            <button onclick="checkToken()" class="w-full bg-slate-700 hover:bg-slate-600 p-2 rounded-lg text-xs font-bold transition-all">1. LẤY DANH SÁCH PAGE</button>
+            
+            <select id="page_id" class="w-full bg-slate-800 p-3 rounded-xl text-sky-400 font-bold border-none"></select>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <input type="text" id="post_id" placeholder="Tên sản phẩm" class="bg-slate-800 p-3 rounded-xl outline-none">
+                <input type="text" id="target_url" placeholder="Link Shopee" class="bg-slate-800 p-3 rounded-xl outline-none">
+            </div>
+            
+            <input type="text" id="image_url" placeholder="Link ảnh (.jpg hoặc .png)" class="w-full bg-slate-800 p-3 rounded-xl outline-none">
+            <textarea id="message" rows="3" placeholder="Nội dung bài viết..." class="w-full bg-slate-800 p-3 rounded-xl outline-none"></textarea>
+            
+            <button onclick="post()" id="btn" class="w-full bg-sky-600 hover:bg-sky-500 p-4 rounded-2xl font-black shadow-lg transition-all active:scale-95">2. ĐĂNG BÀI NGAY</button>
+            
+            <p id="res" class="text-center text-[10px] font-bold uppercase mt-4"></p>
+        </div>
+    </div>
+
+    <script>
+        async function checkToken() {
+            const token = document.getElementById('token').value;
+            const r = await fetch('/api/check-token', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({token})
+            });
+            const res = await r.json();
+            if(res.status === "success") {
+                document.getElementById('page_id').innerHTML = res.pages.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+                document.getElementById('res').innerText = "✅ Đã tải danh sách Page";
+            }
+        }
+
+        async function post() {
+            const btn = document.getElementById('btn');
+            const resMsg = document.getElementById('res');
+            btn.disabled = true;
+            resMsg.innerText = "⏳ Đang đăng bài...";
+
+            const data = {
+                token: document.getElementById('token').value,
+                page_id: document.getElementById('page_id').value,
+                post_id: document.getElementById('post_id').value,
+                target_url: document.getElementById('target_url').value,
+                image_url: document.getElementById('image_url').value,
+                message: document.getElementById('message').value
+            };
+
+            const r = await fetch('/api/post-fb', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await r.json();
+            btn.disabled = false;
+            resMsg.innerText = result.status === "success" ? "✅ ĐÃ ĐĂNG THÀNH CÔNG!" : "❌ LỖI: " + result.message;
+        }
+    </script>
+</body>
+</html>
